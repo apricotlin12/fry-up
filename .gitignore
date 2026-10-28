@@ -3,3 +3,5 @@ github-pages.png
 node_modules/
 .DS_Store
 Thumbs.db
+tests/rare-preview.html
+rare-character.png
