@@ -53,8 +53,9 @@
     for(const p of particles){ctx.globalAlpha=p.t/.45;ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y-camera,4,4)}ctx.globalAlpha=1;
     const oy=state==='ready'?560:oil-camera;ctx.fillStyle='#cc662d';ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(0,oy);for(let x=0;x<=W;x+=8)ctx.lineTo(x,oy+Math.sin(x*.04+time*4)*5);ctx.lineTo(W,H);ctx.closePath();ctx.fill();ctx.strokeStyle='#efad3c';ctx.lineWidth=6;ctx.beginPath();for(let x=0;x<=W;x+=8){const y=oy+Math.sin(x*.04+time*4)*5;x?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke();ctx.fillStyle='#e99436';for(let i=0;i<16;i++){const x=(i*71+23)%W,y=oy+15+(i*23+time*18)%90;ctx.beginPath();ctx.arc(x,y,3+i%5,0,Math.PI*2);ctx.fill()}if(oy<H-20){ctx.fillStyle='#ffda83';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText('♨  HOT! HOT! HOT!  ♨',W/2,oy+47)}
     if(oy<H-65){const rim=oy+70;rounded(-12,rim,W+24,85,15,'#62664f','#353d31');rounded(-8,rim,W+16,12,5,'#a8ac8c','#464e3c');ctx.fillStyle='#d2d4b1';ctx.font='bold 11px monospace';ctx.textAlign='center';ctx.fillText('THE FRYER • 180°C',W/2,rim+42);ctx.fillStyle='#434b39';ctx.fillRect(20,rim+21,22,7);ctx.fillRect(W-42,rim+21,22,7)}
-    ctx.save();ctx.fillStyle='#e7e6caed';ctx.fillRect(191,15,98,57);ctx.textAlign='center';ctx.fillStyle='#636c48';ctx.font='9px sans-serif';ctx.fillText('剩餘生命',240,29);
-    for(let i=0;i<3;i++){rounded(218+i*18,37,10,22,2,i<lives?'#f3bf45':'#c9cbb5',i<lives?'#886b2f':'#a7ad91');if(i<lives){ctx.fillStyle='#ffe38c';ctx.fillRect(220+i*18,40,2,14)}}
+    ctx.save();ctx.textAlign='center';
+    if(basketCharacter){ctx.fillStyle='#e7e6caed';ctx.fillRect(191,15,98,57);ctx.fillStyle='#636c48';ctx.font='9px sans-serif';ctx.fillText('剩餘生命',240,29);
+    for(let i=0;i<3;i++){rounded(218+i*18,37,10,22,2,i<lives?'#f3bf45':'#c9cbb5',i<lives?'#886b2f':'#a7ad91');if(i<lives){ctx.fillStyle='#ffe38c';ctx.fillRect(220+i*18,40,2,14)}}}
     if(noticeTime>0){rounded(92,90,296,36,5,'#f4cf69','#6d7549');ctx.fillStyle='#3e492e';ctx.font='bold 14px sans-serif';ctx.fillText(notice,240,113)}ctx.restore();
     // A subtle scanline texture keeps the entire scene feeling like an arcade screen.
     ctx.fillStyle='#3d482507';for(let y=0;y<H;y+=4)ctx.fillRect(0,y,W,1);
