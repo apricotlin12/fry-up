@@ -5,6 +5,21 @@
   const RARE_CHARACTER_CHANCE=0.0001; // 0.01%: one character roll per new game.
   let basketCharacter=false,lives=1,invulnerable=0,notice='',noticeTime=0;
   function rollRareCharacter(){return Math.random()<RARE_CHARACTER_CHANCE}
+  function addPlatform(p){
+    platforms.push(p);
+    if(p.type==='fragile'){
+      const width=100,gap=58;
+      const right=p.x+p.w+gap;
+      const x=right+width<=W-18?right:p.x-gap-width;
+      platforms.push({x,y:p.y,w:width,type:'normal',id:p.id,backup:true});
+    }
+  }
+  function nextPlatformX(previous,width,spread){
+    const backup=previous.type==='fragile'&&platforms.find(p=>p.backup&&p.id===previous.id);
+    // The next floor must also be reachable after taking the cookie's alternate route.
+    const x=backup?(previous.x+previous.w/2+backup.x+backup.w/2)/2-width/2:previous.x;
+    return Math.max(18,Math.min(W-18-width,x+(Math.random()-.5)*(backup?28:spread)));
+  }
   function takeHit(){
     if(invulnerable>0)return;
     lives--;
@@ -20,7 +35,7 @@
   const ui={score:document.getElementById('score'),best:document.getElementById('best'),overlay:document.getElementById('overlay'),title:document.getElementById('overlayTitle'),text:document.getElementById('overlayText'),tag:document.getElementById('overlayTag'),start:document.getElementById('start'),foot:document.getElementById('overlayFoot')};
   ui.best.textContent=String(best).padStart(3,'0');
   function beep(freq,duration=.08){if(muted)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type='square';o.frequency.value=freq;g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration)}catch{}}
-  function reset(){camera=0;oil=655;score=0;time=0;particles=[];basketCharacter=false;lives=1;invulnerable=0;notice='';noticeTime=0;player={x:240,y:528,vx:0,vy:0,w:27,h:44,face:1,squash:0};platforms=[{x:172,y:575,w:136,type:'normal',id:0}];let x=180;for(let i=1;i<20;i++){x=Math.max(20,Math.min(350,x+(Math.random()-.5)*230));platforms.push({x,y:575-i*75,w:105,type:i%7===0?'spring':i%5===0?'fragile':'normal',id:i})}ui.score.textContent='000'}
+  function reset(){camera=0;oil=655;score=0;time=0;particles=[];basketCharacter=false;lives=1;invulnerable=0;notice='';noticeTime=0;player={x:240,y:528,vx:0,vy:0,w:27,h:44,face:1,squash:0};platforms=[{x:172,y:575,w:136,type:'normal',id:0}];let previous=platforms[0];for(let i=1;i<20;i++){const p={x:nextPlatformX(previous,105,230),y:575-i*75,w:105,type:i%7===0?'spring':i%5===0?'fragile':'normal',id:i};addPlatform(p);previous=p}ui.score.textContent='000'}
   function start(){reset();basketCharacter=rollRareCharacter();lives=basketCharacter?3:1;if(basketCharacter){notice='萬分之一！炸網三薯登場 · 3 條命';noticeTime=4}state='playing';ui.overlay.classList.add('hidden');document.getElementById('pause').textContent='Ⅱ';player.vy=-540;beep(basketCharacter?880:420)}
   function show(tag,title,text,button){ui.tag.textContent=tag;ui.title.textContent=title;ui.text.textContent=text;ui.start.innerHTML=button+' <span>↗</span>';ui.foot.textContent='空白鍵也可以繼續';ui.overlay.classList.remove('hidden')}
   function toggle(){if(state==='playing'){state='paused';keys.clear();show('TAKE A LITTLE BREAK','薯條休息中','喘口氣，再繼續往上。','繼續逃脫');document.getElementById('pause').textContent='▶'}else if(state==='paused'){state='playing';ui.overlay.classList.add('hidden');document.getElementById('pause').textContent='Ⅱ'}else start()}
@@ -30,7 +45,7 @@
     invulnerable=Math.max(0,invulnerable-dt);noticeTime=Math.max(0,noticeTime-dt);
     if(player.vy>0)for(const p of platforms){if(!p.broken&&prevBottom<=p.y+5&&player.y+player.h/2>=p.y&&player.x+12>p.x&&player.x-12<p.x+p.w){player.y=p.y-player.h/2;player.vy=p.type==='spring'?-710:-540;player.squash=.7;if(p.type==='fragile'){p.broken=true;burst(player.x,p.y,'#b98a50')}else burst(player.x,p.y,'#a3a77b');score=Math.max(score,p.id);ui.score.textContent=String(score).padStart(3,'0');beep(p.type==='spring'?700:320+score%8*40);break}}
     camera=Math.min(camera,player.y-270);oil=Math.min(oil,camera+680);oil-=(30+Math.min(score*1.5,100))*dt;
-    const top=platforms[platforms.length-1];if(top.y-camera>-150){let x=Math.max(18,Math.min(360,top.x+(Math.random()-.5)*220));const id=top.id+1;platforms.push({x,y:top.y-72-Math.random()*10,w:Math.max(78,105-score*.2),type:id%7===0?'spring':id%5===0?'fragile':'normal',id})}platforms=platforms.filter(p=>p.y-camera<760);
+    const top=platforms.reduce((highest,p)=>!p.backup&&(!highest||p.y<highest.y)?p:highest,null);if(top&&top.y-camera>-150){const width=Math.max(78,105-score*.2),x=nextPlatformX(top,width,220),id=top.id+1;addPlatform({x,y:top.y-72-Math.random()*10,w:width,type:id%7===0?'spring':id%5===0?'fragile':'normal',id})}platforms=platforms.filter(p=>p.y-camera<760);
     particles.forEach(p=>{p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=250*dt});particles=particles.filter(p=>p.t>0);
     if(player.y+18>oil||player.y-camera>H+50)takeHit();
   }
